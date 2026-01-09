@@ -22,7 +22,6 @@ public class MojangGateway {
     public static final String PROFILE_URL = "https://api.mojang.com/users/profiles/minecraft/";
     public static final String SKIN_URL = "https://sessionserver.mojang.com/session/minecraft/profile/";
 
-    // Кешируем преобразование Ник -> UUID
     @Cacheable(value = "uuids", key = "#username", unless = "#result == null")
     public UUID getUUIDFromUsername(String username) {
         try {

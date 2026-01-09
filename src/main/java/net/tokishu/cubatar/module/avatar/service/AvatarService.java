@@ -14,12 +14,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static net.tokishu.cubatar.module.avatar.AvatarConfig.UUID_PATTERN;
 
@@ -30,11 +27,6 @@ public class AvatarService {
     private final AvatarConfig config;
     private final MojangGateway gateway;
 
-    /***
-     *
-     * @param input User input
-     * @param size  Image Size
-     */
     public void process(String input, int size, HttpServletResponse response) {
         RequestType type = getRequestType(input);
         BufferedImage image = switch (type) {
