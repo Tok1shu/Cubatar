@@ -102,6 +102,11 @@ public class AvatarService {
 
     public void writePngToResponse(BufferedImage image, HttpServletResponse response) {
         response.setContentType("image/png");
+
+        response.setHeader("Cache-Control", "public, max-age=3600");
+        response.setHeader("Pragma", "");
+        response.setHeader("Expires", "");
+
         try (OutputStream out = response.getOutputStream()) {
             ImageIO.write(image, "PNG", out);
             out.flush();

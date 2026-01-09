@@ -109,19 +109,30 @@ public class AvatarGenerator {
      * Затемняет изображение для эффекта освещения
      */
     private static BufferedImage darkenImage(BufferedImage img, float factor) {
-        BufferedImage darkened = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        int width = img.getWidth();
+        int height = img.getHeight();
 
-        for (int y = 0; y < img.getHeight(); y++) {
-            for (int x = 0; x < img.getWidth(); x++) {
-                int rgb = img.getRGB(x, y);
-                int a = (rgb >> 24) & 0xFF;
-                int r = (int)(((rgb >> 16) & 0xFF) * factor);
-                int g = (int)(((rgb >> 8) & 0xFF) * factor);
-                int b = (int)((rgb & 0xFF) * factor);
+        BufferedImage darkened = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-                darkened.setRGB(x, y, (a << 24) | (r << 16) | (g << 8) | b);
+        int[] pixels = new int[width * height];
+        img.getRGB(0, 0, width, height, pixels, 0, width);
+
+        for (int i = 0; i < pixels.length; i++) {
+            int argb = pixels[i];
+
+            if ((argb & 0xFF000000) == 0) {
+                continue;
             }
+
+            int a = (argb >> 24) & 0xFF;
+            int r = (int)(((argb >> 16) & 0xFF) * factor);
+            int g = (int)(((argb >> 8) & 0xFF) * factor);
+            int b = (int)((argb & 0xFF) * factor);
+
+            pixels[i] = (a << 24) | (r << 16) | (g << 8) | b;
         }
+
+        darkened.setRGB(0, 0, width, height, pixels, 0, width);
 
         return darkened;
     }
