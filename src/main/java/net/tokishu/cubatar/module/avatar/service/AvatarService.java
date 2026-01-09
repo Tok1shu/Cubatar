@@ -102,17 +102,25 @@ public class AvatarService {
 
     public void writePngToResponse(BufferedImage image, HttpServletResponse response) {
         response.setContentType("image/png");
-
         response.setHeader("Cache-Control", "public, max-age=3600");
-        response.setHeader("Pragma", "");
-        response.setHeader("Expires", "");
 
         try (OutputStream out = response.getOutputStream()) {
             ImageIO.write(image, "PNG", out);
             out.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            if (isClientAbort(e)) {
+                return;
+            }
+            System.err.println("Ошибка при отправке изображения: " + e.getMessage());
         }
+    }
+
+    private boolean isClientAbort(IOException e) {
+        if (e.getClass().getSimpleName().contains("ClientAbortException")) {
+            return true;
+        }
+        String msg = e.getMessage();
+        return msg != null && (msg.contains("Broken pipe") || msg.contains("Connection reset"));
     }
 
     private boolean isBase64Url(String input) {
