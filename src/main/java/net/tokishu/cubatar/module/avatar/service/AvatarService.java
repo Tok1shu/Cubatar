@@ -6,8 +6,10 @@ import net.tokishu.cubatar.module.avatar.AvatarConfig;
 import net.tokishu.cubatar.module.avatar.domain.enums.RequestType;
 import net.tokishu.cubatar.module.avatar.service.integration.MojangGateway;
 import net.tokishu.cubatar.module.avatar.util.AvatarGenerator;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -67,11 +69,11 @@ public class AvatarService {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes)) {
             BufferedImage image = ImageIO.read(bis);
             if (image == null) {
-                throw new IllegalArgumentException("По ссылке не картинка или формат не поддерживается");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not image or unsupported format");
             }
             return AvatarGenerator.extractHeadIcon(image, size);
         } catch (IOException e) {
-            throw new RuntimeException("Ошибка при чтении изображения", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while reading image");
         }
     }
 
@@ -89,7 +91,7 @@ public class AvatarService {
             return RequestType.NICKNAME;
         }
 
-        throw new IllegalArgumentException("Недопустимый аргумент"); // TODO: Как появится exception handler поменять на ошибку.
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad request");
     }
 
     public void writePngToResponse(BufferedImage image, HttpServletResponse response) {
@@ -103,7 +105,7 @@ public class AvatarService {
             if (isClientAbort(e)) {
                 return;
             }
-            System.err.println("Ошибка при отправке изображения: " + e.getMessage());
+            System.err.println("Error while sending image to client: " + e.getMessage());
         }
     }
 

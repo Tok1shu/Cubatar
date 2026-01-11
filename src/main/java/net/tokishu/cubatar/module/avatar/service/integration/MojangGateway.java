@@ -2,8 +2,11 @@ package net.tokishu.cubatar.module.avatar.service.integration;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -25,14 +28,17 @@ public class MojangGateway {
     @Cacheable(value = "uuids", key = "#username", unless = "#result == null")
     public UUID getUUIDFromUsername(String username) {
         try {
-            String response = restClient.get()
+            ResponseEntity<String> response = restClient.get()
                     .uri(PROFILE_URL + username)
                     .retrieve()
-                    .body(String.class);
+                    .toEntity(String.class);
 
-            if (response == null || response.isEmpty()) return null;
+            if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
 
-            JsonNode root = mapper.readTree(response);
+            if (response == null || response.getBody().isEmpty()) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting UUID");
+
+            JsonNode root = mapper.readTree(response.getBody());
+
             return parseUUID(root.get("id").asString());
         } catch (Exception e) {
             return null;
@@ -55,7 +61,11 @@ public class MojangGateway {
             if (properties != null && properties.isArray() && !properties.isEmpty()) {
                 String encodedJson = properties.get(0).get("value").asString();
                 String decodedJson = new String(Base64.getDecoder().decode(encodedJson));
-                return mapper.readTree(decodedJson).get("textures").get("SKIN").get("url").asString();
+
+                String skinUrl = mapper.readTree(decodedJson).get("textures").get("SKIN").get("url").asString();
+                if (skinUrl == null) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting skin URL");
+
+                return skinUrl;
             }
             return null;
         } catch (Exception e) {
