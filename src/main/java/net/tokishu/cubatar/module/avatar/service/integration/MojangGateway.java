@@ -27,50 +27,42 @@ public class MojangGateway {
 
     @Cacheable(value = "uuids", key = "#username", unless = "#result == null")
     public UUID getUUIDFromUsername(String username) {
-        try {
-            ResponseEntity<String> response = restClient.get()
-                    .uri(PROFILE_URL + username)
-                    .retrieve()
-                    .toEntity(String.class);
+        ResponseEntity<String> response = restClient.get()
+                .uri(PROFILE_URL + username)
+                .retrieve()
+                .toEntity(String.class);
 
-            if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
+        if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
 
-            if (response == null || response.getBody().isEmpty()) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting UUID");
+        if (response == null || response.getBody().isEmpty()) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting UUID");
 
-            JsonNode root = mapper.readTree(response.getBody());
+        JsonNode root = mapper.readTree(response.getBody());
 
-            return parseUUID(root.get("id").asString());
-        } catch (Exception e) {
-            return null;
-        }
+        return parseUUID(root.get("id").asString());
     }
 
     @Cacheable(value = "skins", key = "#uuid", unless = "#result == null")
     public String getSkinUrlFromUUID(UUID uuid) {
-        try {
-            String response = restClient.get()
-                    .uri(SKIN_URL + uuid.toString())
-                    .retrieve()
-                    .body(String.class);
+        String response = restClient.get()
+                .uri(SKIN_URL + uuid.toString())
+                .retrieve()
+                .body(String.class);
 
-            if (response == null) return null;
+        if (response == null) return null;
 
-            JsonNode root = mapper.readTree(response);
-            JsonNode properties = root.get("properties");
+        JsonNode root = mapper.readTree(response);
+        JsonNode properties = root.get("properties");
 
-            if (properties != null && properties.isArray() && !properties.isEmpty()) {
-                String encodedJson = properties.get(0).get("value").asString();
-                String decodedJson = new String(Base64.getDecoder().decode(encodedJson));
+        if (properties != null && properties.isArray() && !properties.isEmpty()) {
+            String encodedJson = properties.get(0).get("value").asString();
+            String decodedJson = new String(Base64.getDecoder().decode(encodedJson));
 
-                String skinUrl = mapper.readTree(decodedJson).get("textures").get("SKIN").get("url").asString();
-                if (skinUrl == null) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting skin URL");
+            String skinUrl = mapper.readTree(decodedJson).get("textures").get("SKIN").get("url").asString();
+            if (skinUrl == null) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting skin URL");
 
-                return skinUrl;
-            }
-            return null;
-        } catch (Exception e) {
-            return null;
+            return skinUrl;
         }
+        return null;
     }
 
     private UUID parseUUID(String idWithoutDashes) {
