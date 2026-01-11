@@ -9,8 +9,7 @@
 
 **Мощный и быстрый сервис генерации аватаров Minecraft.**
 
-[Live Demo](https://cubatar.onrender.com/v1/avatar/Phemida?size=500) | [Документация](#документация-api) | [English](README.md)
-
+[Live Demo](http://87.251.76.217:8080/v1/avatar/Phemida?size=500) | [Документация](#документация-api) | [English](README.md)
 </div>
 
 ---
