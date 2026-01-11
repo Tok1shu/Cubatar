@@ -9,7 +9,7 @@
 
 **A robust, high-performance Minecraft avatar generation service.**
 
-[Live Demo](https://cubatar.onrender.com/v1/avatar/Phemida?size=500) | [Documentation](#api-documentation) | [Русский](README_ru.md)
+[Live Demo](http://87.251.76.217:8080/v1/avatar/Phemida?size=500) | [Documentation](#api-documentation) | [Русский](README_ru.md)
 
 </div>
 
