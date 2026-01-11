@@ -3,8 +3,9 @@ package net.tokishu.cubatar.module.avatar.service.integration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
@@ -15,7 +16,7 @@ import java.util.UUID;
 
 import static net.tokishu.cubatar.module.avatar.AvatarConfig.MOJANG_TO_UUID_REGEX;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class MojangGateway {
 
@@ -30,6 +31,7 @@ public class MojangGateway {
         ResponseEntity<String> response = restClient.get()
                 .uri(PROFILE_URL + username)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {})
                 .toEntity(String.class);
 
         if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
@@ -46,6 +48,7 @@ public class MojangGateway {
         String response = restClient.get()
                 .uri(SKIN_URL + uuid.toString())
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {})
                 .body(String.class);
 
         if (response == null) return null;
