@@ -11,7 +11,7 @@
 
 ---
 
-Cubatar turns Minecraft usernames, UUIDs, or Base64 skins into beautiful, layered 3D avatars. It's built on Java 21 to be simple, fast, and completely hassle-free.
+Cubatar turns Minecraft usernames, UUIDs, or raw skin URLs into beautiful, layered 3D avatars. Built with Java 21 to be fast, stable, and easy to integrate.
 
 ## Why Cubatar?
 
@@ -38,6 +38,9 @@ Just make a `GET` request:
 ```bash
 # size is optional (defaults to 64px)
 curl "http://localhost:8080/v1/avatar/Notch?size=128"
+
+# Using a direct URL (or base64 encoded URL)
+curl "http://localhost:8080/v1/avatar/https%3A%2F%2Fexample.com%2Fskin.png"
 ```
 
 ### Run Locally
