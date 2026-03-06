@@ -28,9 +28,6 @@ public class AvatarGenerator {
         int overlayBackX = Math.round(56 * scale);
         int overlayBackY = Math.round(8 * scale);
 
-        // РЕШАЮЩИЙ МОМЕНТ: Проверяем, стоит ли рисовать оверлей
-        // Если это старый скин (64x32) и слой шапки полностью залит (нет прозрачности),
-        // значит Java прочитала его криво, либо это черный фон. Отключаем шапку.
         boolean isLegacy = (rawSkin.getHeight() == 32);
         boolean hasOverlay = shouldRenderOverlay(skin, overlayX, overlayY, blockSize, blockSize, isLegacy);
 
@@ -73,9 +70,6 @@ public class AvatarGenerator {
         return result;
     }
 
-    /**
-     * Эвристика: проверяем, не является ли "шапка" просто черным квадратом
-     */
     private static boolean shouldRenderOverlay(BufferedImage skin, int x, int y, int w, int h, boolean isLegacy) {
         BufferedImage crop = skin.getSubimage(x, y, w, h);
 
