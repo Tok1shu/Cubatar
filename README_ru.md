@@ -3,7 +3,6 @@
 # Cubatar
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.1-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
@@ -16,7 +15,7 @@
 
 Cubatar предоставляет простой, но мощный API для получения и рендеринга слоистых 3D-аватаров игроков Minecraft. Сервис обрабатывает различные варианты ввода, включая никнеймы, UUID и URL-адреса скинов в Base64, обеспечивая высококачественный рендеринг с поддержкой внешних слоев (шапки и т.д.).
 
-## 🌟 Возможности
+## Возможности
 
 - **Послойный рендеринг**: Генерирует высококачественные аватары с корректным отображением второго слоя (шапки, аксессуары и т.д.) для полноценного внешнего вида.
 - **Гибкий ввод**: Поддерживает:
@@ -29,7 +28,7 @@ Cubatar предоставляет простой, но мощный API для 
     - **Асинхронная обработка**: Оптимизировано для высокой нагрузки.
 - **Современный стек**: Построен на Java 21 и экосистеме Spring Boot.
 
-## 🎨 Галерея
+## Галерея
 
 Примеры аватаров, сгенерированных Cubatar:
 
@@ -42,7 +41,7 @@ Cubatar предоставляет простой, но мощный API для 
   <img src="examples/Syn7esis.png" width="100" />
 </div>
 
-## 🚀 Документация API
+## Документация API
 
 ### Получить аватар игрока
 
@@ -69,7 +68,7 @@ curl "http://localhost:8080/v1/avatar/Notch?size=128"
 - **Кэширование**: Caffeine
 
 
-## 📦 Начало работы
+## Начало работы
 
 ### Требования
 
