@@ -48,7 +48,9 @@ public class MojangGateway {
         String response = restClient.get()
                 .uri(SKIN_URL + uuid.toString())
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, res) -> {})
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting skin URL");
+                })
                 .body(String.class);
 
         if (response == null) return null;
