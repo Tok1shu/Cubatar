@@ -28,6 +28,7 @@ public class AvatarService {
 
     private final AvatarConfig config;
     private final MojangGateway gateway;
+    private final RestClient restClient;
 
     public void process(String input, int size, HttpServletResponse response) {
         RequestType type = getRequestType(input);
@@ -58,8 +59,6 @@ public class AvatarService {
             byte[] decodedBytesUrl = Base64.getUrlDecoder().decode(input);
             realUrl = new String(decodedBytesUrl, StandardCharsets.UTF_8);
         }
-
-        RestClient restClient = RestClient.create();
 
         byte[] imageBytes = restClient.get()
                 .uri(realUrl)
