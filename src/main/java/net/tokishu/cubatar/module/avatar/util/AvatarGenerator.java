@@ -5,6 +5,10 @@ import lombok.experimental.UtilityClass;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+/*
+VIBECODED class
+*/
+
 @UtilityClass
 public class AvatarGenerator {
 
