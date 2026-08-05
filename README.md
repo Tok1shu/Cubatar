@@ -11,6 +11,8 @@
 
 Cubatar turns Minecraft usernames, UUIDs, or raw skin URLs into beautiful, layered 3D avatars. Built with Java 21 to be fast, stable, and easy to integrate.
 
+> **New:** full-body avatars (front & back view) via `/v1/body/{input}`, plus a `/v1/skin/{input}` endpoint to fetch the raw resolved skin texture — on top of the existing head icons.
+
 ## Why Cubatar?
 
 - **Perfect Renders:** Full support for the second skin layer (hats, glasses, jackets).
@@ -28,18 +30,43 @@ Cubatar turns Minecraft usernames, UUIDs, or raw skin URLs into beautiful, layer
   <img src="examples/Syn7esis.png" width="100" />
 </div>
 
+### Full body (front & back)
+
+<div align="center">
+  <img src="examples/Tok1shu_front.png" width="100" />
+  <img src="examples/Syn7esis_front.png" width="100" />
+  <img src="examples/oVastix_front.png" width="100" />
+  <img src="examples/zzefirr_front.png" width="100" />
+  <img src="examples/Sojahn09_front.png" width="100" />
+  <br/>
+  <img src="examples/Tok1shu_back.png" width="100" />
+  <img src="examples/Syn7esis_back.png" width="100" />
+  <img src="examples/oVastix_back.png" width="100" />
+  <img src="examples/zzefirr_back.png" width="100" />
+  <img src="examples/Sojahn09_back.png" width="100" />
+</div>
+
 ## Quick Start
 
 ### API Usage
 
 Just make a `GET` request:
 ```bash
-# size is optional (defaults to 64px)
+# Head icon (size is optional, defaults to 64px)
 curl "http://localhost:8080/v1/avatar/Notch?size=128"
 
-# Using a direct URL (or base64 encoded URL)
+# Full body, front or back view (size defaults to 128px)
+curl "http://localhost:8080/v1/body/Notch?size=128&back=false"
+curl "http://localhost:8080/v1/body/Notch?size=128&back=true"
+
+# Raw skin texture, no processing (useful to inspect what was resolved)
+curl "http://localhost:8080/v1/skin/Notch"
+
+# Using a direct URL (or base64 encoded URL) — works on all three endpoints
 curl "http://localhost:8080/v1/avatar/https%3A%2F%2Fexample.com%2Fskin.png"
 ```
+
+Legacy 64x32 skins (pre-1.8, no second layer / no slim arms) are detected automatically and rendered without the jacket/sleeves overlay, same as in-game.
 
 ### Run Locally
 

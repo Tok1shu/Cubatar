@@ -1,4 +1,4 @@
-package net.tokishu.cubatar.module.avatar.service.integration;
+package net.tokishu.cubatar.module.resolve;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -14,7 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Base64;
 import java.util.UUID;
 
-import static net.tokishu.cubatar.module.avatar.AvatarConfig.MOJANG_TO_UUID_REGEX;
+import static net.tokishu.cubatar.module.resolve.ResolverConfig.MOJANG_TO_UUID_REGEX;
 
 @Service
 @RequiredArgsConstructor

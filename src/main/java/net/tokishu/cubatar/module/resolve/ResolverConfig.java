@@ -1,11 +1,11 @@
-package net.tokishu.cubatar.module.avatar;
+package net.tokishu.cubatar.module.resolve;
 
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
 
 @Component
-public class AvatarConfig {
+public class ResolverConfig {
     public static final String UUID_REGEX = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
     public static final Pattern UUID_PATTERN = Pattern.compile(UUID_REGEX);
 
