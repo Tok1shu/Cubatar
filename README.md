@@ -12,12 +12,13 @@
 
 Cubatar turns Minecraft usernames, UUIDs, or raw skin URLs into beautiful renders: flat icons, true-3D isometric heads and bodies, posed full-body "cards", and an embeddable interactive 3D viewer. Built with Java 21 to be fast, stable, and easy to integrate.
 
-> **New:** a real voxel render engine — `/v1/iso/{head|body|full}` draws the player as actual 3D boxes under any camera angle, with in-game-accurate second-layer inflation, walking pose, and slim/classic model detection straight from the Mojang profile. Plus `/view/{input}`: a WebGL viewer page you can drop into an `<iframe>`.
+> **New:** a real voxel render engine — `/v1/iso/{head|body|full}` draws the player as actual 3D boxes under any camera angle, with in-game-accurate second-layer inflation, walking pose, capes, and slim/classic model detection straight from the Mojang profile. Plus `/view/{input}`: a WebGL viewer page you can drop into an `<iframe>`.
 
 ## Why Cubatar?
 
 - **True 3D, not sprite tricks:** the iso engine rotates real boxes (head, torso, limbs) and renders every visible face — second layers are inflated exactly like in-game (hat +0.5px, layers +0.25px per side), including the visible inner side of far faces.
-- **Correct arm width:** slim/classic is read from the Mojang profile metadata (not guessed from pixels), with a transparency heuristic as fallback for direct URLs and an explicit `model=` override.
+- **Correct arm width:** slim/classic is read from the Mojang profile metadata, with a transparency heuristic covering the ambiguous case (Mojang only states `slim` explicitly — a missing value means "unspecified", and plenty of slim-drawn skins land there) and an explicit `model=` override on top.
+- **Capes:** rendered as a real box hanging from the shoulders, tilted, swinging along with the walking pose — and available raw via `/v1/cape/{input}`.
 - **Smart inputs:** throw a nickname, UUID, or base64-encoded skin URL at any endpoint — it figures it out.
 - **Fast & embed-friendly:** Caffeine caching against Mojang rate limits, `Cache-Control` on every PNG, and permissive CORS (`Access-Control-Allow-Origin: *`) so images work in canvas/WebGL on any site.
 - **Legacy-proof:** old 64x32 skins render like in-game — mirrored left limbs, no overlay layers.
@@ -57,6 +58,15 @@ Cubatar turns Minecraft usernames, UUIDs, or raw skin URLs into beautiful render
 
 *The last one is the same request with `yaw=200` — any angle works, including from behind.*
 
+### Capes
+
+<div align="center">
+  <img src="examples/zzefirr_cape.png" height="200" />
+  <img src="examples/zzefirr_cape_body.png" height="200" />
+</div>
+
+*Capes hang from the shoulders and swing with the walking pose. In waist-up renders (right) the cape is clipped at the bottom of the torso, so the frame size never changes.*
+
 ### Full body, flat (front & back)
 
 <div align="center">
@@ -84,6 +94,7 @@ Cubatar turns Minecraft usernames, UUIDs, or raw skin URLs into beautiful render
 | `/v1/avatar/{input}` | Head icon with hat layer | `size=64` |
 | `/v1/body/{input}` | Waist-up, front or back | `size=128`, `back=false`, `model=auto` |
 | `/v1/skin/{input}` | Raw resolved skin texture | — |
+| `/v1/cape/{input}` | Raw cape texture (404 if none) | — |
 
 ### 3D renders (iso engine)
 
@@ -100,7 +111,8 @@ Cubatar turns Minecraft usernames, UUIDs, or raw skin URLs into beautiful render
 - `size` — head edge in pixels; every other part scales from it.
 - `yaw` / `pitch` — camera angles in degrees.
 - `pose=walk` — walking pose (right arm & left leg forward, like in-game).
-- `model=slim|classic` — force arm width; `auto` uses Mojang profile metadata, falling back to a texture heuristic for direct URLs.
+- `model=slim|classic` — force arm width; `auto` trusts the Mojang profile when it states `slim` and falls back to a texture heuristic otherwise.
+- `cape=false` — drop the cape (body/full only; on by default when the player has one). In waist-up renders the cape is clipped at the bottom of the torso, so the frame stays the same size with or without it.
 
 ```bash
 # Classic isometric head
@@ -111,6 +123,9 @@ curl "http://localhost:8080/v1/iso/full/Notch?yaw=20&pitch=0&pose=walk"
 
 # Same skin, forced slim arms
 curl "http://localhost:8080/v1/iso/full/Notch?model=slim"
+
+# Cape shows up automatically — pass cape=false to drop it
+curl "http://localhost:8080/v1/iso/full/Notch?yaw=200&pose=walk"
 ```
 
 ### Interactive 3D viewer
@@ -121,7 +136,7 @@ curl "http://localhost:8080/v1/iso/full/Notch?model=slim"
 <iframe src="https://your.host/view/Notch?headbob=false" width="300" height="400" frameborder="0"></iframe>
 ```
 
-Parameters: `walk=true` (walking animation), `headbob=true` (head movement during walk), `rotate=true` (auto-rotate), `wheelzoom=false` (mouse-wheel zoom — off so the iframe doesn't steal scrolling), `zoom=0.9`, `fov=40`, `bg=` (hex color, transparent by default), `model=auto`.
+Parameters: `walk=true` (walking animation), `headbob=true` (head movement during walk), `rotate=true` (auto-rotate), `wheelzoom=false` (mouse-wheel zoom — off so the iframe doesn't steal scrolling), `zoom=0.9`, `fov=40`, `bg=` (hex color, transparent by default), `model=auto`, `cape=true` (wear the player's cape), `elytra=false` (wear it as elytra instead).
 
 ## Quick Start
 
