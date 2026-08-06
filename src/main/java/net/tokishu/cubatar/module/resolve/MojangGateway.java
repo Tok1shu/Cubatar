@@ -62,7 +62,8 @@ public class MojangGateway {
             String encodedJson = properties.get(0).get("value").asString();
             String decodedJson = new String(Base64.getDecoder().decode(encodedJson));
 
-            JsonNode skinNode = mapper.readTree(decodedJson).get("textures").get("SKIN");
+            JsonNode textures = mapper.readTree(decodedJson).get("textures");
+            JsonNode skinNode = textures.get("SKIN");
             String skinUrl = skinNode.get("url").asString();
             if (skinUrl == null) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting skin URL");
 
@@ -73,7 +74,12 @@ public class MojangGateway {
                     && metadata.get("model") != null
                     && "slim".equals(metadata.get("model").asString());
 
-            return new SkinTexture(skinUrl, slim);
+            JsonNode capeNode = textures.get("CAPE");
+            String capeUrl = capeNode != null && capeNode.get("url") != null
+                    ? capeNode.get("url").asString()
+                    : null;
+
+            return new SkinTexture(skinUrl, slim, capeUrl);
         }
         return null;
     }

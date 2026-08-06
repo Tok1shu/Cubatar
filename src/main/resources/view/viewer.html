@@ -34,6 +34,14 @@
       [(params.get("model") || "").toLowerCase()] || "auto-detect";
   viewer.loadSkin("/v1/skin/" + encodeURIComponent(input), { model });
 
+  // Плащ (если есть): ?cape=false - скрыть, ?elytra=true - носить как элитры.
+  // 404 от /v1/cape просто гасим - значит, плаща у игрока нет.
+  if (flag("cape", true)) {
+    viewer.loadCape("/v1/cape/" + encodeURIComponent(input), {
+      backEquipment: flag("elytra", false) ? "elytra" : "cape",
+    }).catch(() => {});
+  }
+
   if (flag("walk", true)) {
     viewer.animation = new skinview3d.WalkingAnimation();
     viewer.animation.speed = 0.6;

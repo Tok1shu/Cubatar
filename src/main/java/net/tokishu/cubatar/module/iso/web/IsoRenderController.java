@@ -29,7 +29,7 @@ public class IsoRenderController {
             @RequestParam(defaultValue = "30") double pitch,
             HttpServletResponse response) {
 
-        service.process(input, size, yaw, pitch, Part.HEAD, false, null, response);
+        service.process(input, size, yaw, pitch, Part.HEAD, false, null, false, response);
     }
 
     @GetMapping("/body/{input}")
@@ -40,9 +40,10 @@ public class IsoRenderController {
             @RequestParam(defaultValue = "30") double pitch,
             @RequestParam(defaultValue = "stand") String pose,
             @RequestParam(defaultValue = "auto") String model,
+            @RequestParam(defaultValue = "true") boolean cape,
             HttpServletResponse response) {
 
-        service.process(input, size, yaw, pitch, Part.BODY, isWalking(pose), SkinModel.parse(model), response);
+        service.process(input, size, yaw, pitch, Part.BODY, isWalking(pose), SkinModel.parse(model), cape, response);
     }
 
     @GetMapping("/full/{input}")
@@ -53,9 +54,10 @@ public class IsoRenderController {
             @RequestParam(defaultValue = "30") double pitch,
             @RequestParam(defaultValue = "stand") String pose,
             @RequestParam(defaultValue = "auto") String model,
+            @RequestParam(defaultValue = "true") boolean cape,
             HttpServletResponse response) {
 
-        service.process(input, size, yaw, pitch, Part.FULL, isWalking(pose), SkinModel.parse(model), response);
+        service.process(input, size, yaw, pitch, Part.FULL, isWalking(pose), SkinModel.parse(model), cape, response);
     }
 
     private static boolean isWalking(String pose) {

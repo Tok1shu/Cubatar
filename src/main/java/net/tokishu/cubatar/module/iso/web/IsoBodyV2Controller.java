@@ -25,8 +25,9 @@ public class IsoBodyV2Controller {
             @RequestParam(defaultValue = "128") int size,
             @RequestParam(defaultValue = "false") boolean back,
             @RequestParam(defaultValue = "auto") String model,
+            @RequestParam(defaultValue = "true") boolean cape,
             HttpServletResponse response) {
 
-        service.process(input, size, back ? 180 : 0, 0, Part.BODY, false, SkinModel.parse(model), response);
+        service.process(input, size, back ? 180 : 0, 0, Part.BODY, false, SkinModel.parse(model), cape, response);
     }
 }

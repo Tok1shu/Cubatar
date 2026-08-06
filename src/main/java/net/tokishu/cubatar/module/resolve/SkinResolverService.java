@@ -36,15 +36,35 @@ public class SkinResolverService {
         RequestType type = getRequestType(input);
         return switch (type) {
             case UUID     -> skinFromUUID(UUID.fromString(input));
-            case URL      -> new ResolvedSkin(skinFromUrl(input), null);
+            case URL      -> new ResolvedSkin(skinFromUrl(input), null, null);
             case NICKNAME -> skinFromUUID(gateway.getUUIDFromUsername(input));
         };
+    }
+
+    /** Качает произвольную текстуру (например, плащ по capeUrl из {@link ResolvedSkin}). */
+    public BufferedImage fetchTexture(String url) {
+        return skinFromUrl(url);
+    }
+
+    /** URL плаща без скачивания скина; null - нет плаща или input не про профиль (прямой URL). */
+    public String resolveCapeUrl(String input) {
+        RequestType type = getRequestType(input);
+        return switch (type) {
+            case UUID     -> capeFromUUID(UUID.fromString(input));
+            case NICKNAME -> capeFromUUID(gateway.getUUIDFromUsername(input));
+            case URL      -> null;
+        };
+    }
+
+    private String capeFromUUID(UUID uuid) {
+        SkinTexture texture = gateway.getSkinFromUUID(uuid);
+        return texture == null ? null : texture.capeUrl();
     }
 
     private ResolvedSkin skinFromUUID(UUID uuid) {
         SkinTexture texture = gateway.getSkinFromUUID(uuid);
         if (texture == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Skin not found");
-        return new ResolvedSkin(skinFromUrl(texture.url()), texture.slim());
+        return new ResolvedSkin(skinFromUrl(texture.url()), texture.slim(), texture.capeUrl());
     }
 
     private BufferedImage skinFromUrl(String input) {

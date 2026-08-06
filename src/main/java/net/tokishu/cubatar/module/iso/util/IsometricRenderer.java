@@ -46,15 +46,26 @@ public class IsometricRenderer {
     private static final double WALK_ARM_SWING = Math.toRadians(27);
     private static final double WALK_LEG_SWING = Math.toRadians(30);
 
+    /** Наклон плаща от спины: лёгкий в стойке, сильнее в ходьбе. */
+    private static final double CAPE_TILT = Math.toRadians(12);
+    private static final double CAPE_TILT_WALK = Math.toRadians(32);
+
     // ── Публичное API ────────────────────────────────────────────────────
 
+    /** Рендер без плаща - см. полную сигнатуру ниже. */
+    public static BufferedImage render(BufferedImage rawSkin, int size, double yawDeg, double pitchDeg,
+                                       Part part, boolean walking, Boolean slim) {
+        return render(rawSkin, null, size, yawDeg, pitchDeg, part, walking, slim);
+    }
+
     /**
+     * @param cape    текстура плаща (64x32) или null; рисуется только для BODY/FULL
      * @param size    размер головы (8 вокселей) в пикселях
      * @param walking поза ходьбы: правая рука и левая нога вперёд, как в игре
      * @param slim    модель из профиля Mojang; null - неизвестна, определяем
      *                эвристикой по прозрачности
      */
-    public static BufferedImage render(BufferedImage rawSkin, int size, double yawDeg, double pitchDeg,
+    public static BufferedImage render(BufferedImage rawSkin, BufferedImage cape, int size, double yawDeg, double pitchDeg,
                                        Part part, boolean walking, Boolean slim) {
         if (rawSkin == null) return null;
 
@@ -67,8 +78,15 @@ public class IsometricRenderer {
         double yaw = Math.toRadians(yawDeg);
         double pitch = Math.toRadians(pitchDeg);
 
-        List<Box> boxes = buildBoxes(part, walking, isAlex, isLegacy, skin, scale);
-        Canvas canvas = boundingCanvas(boxes, yaw, pitch, ppv);
+        List<Box> boxes = buildBoxes(part, walking, isAlex, isLegacy, skin, scale, cape);
+
+        // Плащ (16 вокселей) свисает ниже пояса, поэтому в рендере "по пояс"
+        // он не участвует в расчёте холста - иначе кадр вытягивался бы вниз
+        // пустотой. Всё, что вышло за холст, отсекает сам Graphics2D.
+        List<Box> boundsBoxes = part == Part.BODY
+                ? boxes.stream().filter(b -> !isCape(b)).toList()
+                : boxes;
+        Canvas canvas = boundingCanvas(boundsBoxes, yaw, pitch, ppv);
 
         List<Quad> quads = new ArrayList<>();
         for (Box b : boxes) {
@@ -102,7 +120,7 @@ public class IsometricRenderer {
      * (и его тоже: у legacy другая раскладка хвоста текстуры).
      */
     private static List<Box> buildBoxes(Part part, boolean walking, boolean isAlex, boolean isLegacy,
-                                        BufferedImage skin, float scale) {
+                                        BufferedImage skin, float scale, BufferedImage cape) {
         int armW = isAlex ? 3 : 4;
         double armCx = 4 + armW / 2.0;
         // Мах конечностей: правая рука и левая нога вперёд (+Z), их пары - назад
@@ -124,6 +142,14 @@ public class IsometricRenderer {
                     ? new Box(new Vec3(2, -18, 0), 4, 12, 4, 0, 16, 0, true, false, LEG_PIVOT_Y, -legSwing)
                     : new Box(new Vec3(2, -18, 0), 4, 12, 4, 16, 48, 0, false, false, LEG_PIVOT_Y, -legSwing));
         }
+        if (cape != null && part != Part.HEAD) {
+            // Плащ - коробка 10x16x1 со своей текстурой (64x32), висит на линии
+            // плеч (y=0) вплотную к спине и качается вокруг неё как конечность;
+            // flipZ - внешний дизайн из первого UV-блока смотрит назад
+            boxes.add(new Box(new Vec3(0, -8, -2.5), 10, 16, 1, 0, 0,
+                    cape, cape.getWidth() / 64f,
+                    0, false, false, true, 0, walking ? CAPE_TILT_WALK : CAPE_TILT));
+        }
 
         if (!isLegacy) {
             addOverlayIfPresent(boxes, skin, scale, new Box(new Vec3(0, 4, 0), 8, 8, 8, 32, 0, HAT_INFLATE, false, true));
@@ -138,6 +164,11 @@ public class IsometricRenderer {
             }
         }
         return boxes;
+    }
+
+    /** Плащ - единственная коробка со своей текстурой. */
+    private static boolean isCape(Box b) {
+        return b.tex() != null;
     }
 
     /** Добавляет коробку второго слоя, только если в её UV-области есть хоть один непрозрачный пиксель. */
@@ -199,14 +230,24 @@ public class IsometricRenderer {
      * стороны при рендере. mirrored - для legacy-скинов: конечность рисуется
      * зеркальной копией правой. doubleSided - рисовать и отвёрнутые от камеры
      * грани (вторые слои). swing/pivotY - поза, см. javadoc класса.
+     * tex/texScale - собственная текстура коробки (плащ); null - используется
+     * скин и его масштаб. flipZ - коробка "носится" наружной стороной в -Z:
+     * блок FRONT её раскладки показывается на грани BACK и наоборот (плащ -
+     * его внешний дизайн лежит в первом блоке UV, но смотрит назад).
      */
     private record Box(Vec3 center, int w, int h, int d, int uvX, int uvY,
-                       double inflate, boolean mirrored, boolean doubleSided,
+                       BufferedImage tex, float texScale,
+                       double inflate, boolean mirrored, boolean doubleSided, boolean flipZ,
                        double pivotY, double swing) {
 
         Box(Vec3 center, int w, int h, int d, int uvX, int uvY,
             double inflate, boolean mirrored, boolean doubleSided) {
-            this(center, w, h, d, uvX, uvY, inflate, mirrored, doubleSided, 0, 0);
+            this(center, w, h, d, uvX, uvY, null, 0, inflate, mirrored, doubleSided, false, 0, 0);
+        }
+
+        Box(Vec3 center, int w, int h, int d, int uvX, int uvY,
+            double inflate, boolean mirrored, boolean doubleSided, double pivotY, double swing) {
+            this(center, w, h, d, uvX, uvY, null, 0, inflate, mirrored, doubleSided, false, pivotY, swing);
         }
 
         /** Применяет позу: качает точку вокруг шарнира {y=pivotY, z=0}. */
@@ -320,11 +361,23 @@ public class IsometricRenderer {
      * (сама картинка дополнительно отражается в {@link #faceTexture}).
      */
     private static UvRect faceUv(Box b, Side side) {
-        Side src = b.mirrored() ? switch (side) {
-            case LEFT -> Side.RIGHT;
-            case RIGHT -> Side.LEFT;
-            default -> side;
-        } : side;
+        Side src = side;
+        if (b.flipZ()) {
+            src = switch (src) {
+                case FRONT -> Side.BACK;
+                case BACK -> Side.FRONT;
+                case LEFT -> Side.RIGHT;
+                case RIGHT -> Side.LEFT;
+                default -> src;
+            };
+        }
+        if (b.mirrored()) {
+            src = switch (src) {
+                case LEFT -> Side.RIGHT;
+                case RIGHT -> Side.LEFT;
+                default -> src;
+            };
+        }
         int u = b.uvX(), v = b.uvY(), w = b.w(), h = b.h(), d = b.d();
         return switch (src) {
             case FRONT  -> new UvRect(u + d, v + d, w, h);
@@ -337,14 +390,17 @@ public class IsometricRenderer {
     }
 
     private static BufferedImage faceTexture(BufferedImage skin, float scale, Box b, FaceSpec f) {
-        UvRect uv = faceUv(b, f.side());
-        int sx = Math.round(uv.x() * scale);
-        int sy = Math.round(uv.y() * scale);
-        int sw = Math.round(uv.w() * scale);
-        int sh = Math.round(uv.h() * scale);
-        if (sx + sw > skin.getWidth() || sy + sh > skin.getHeight()) return null;
+        BufferedImage src = b.tex() != null ? b.tex() : skin;
+        float s = b.tex() != null ? b.texScale() : scale;
 
-        BufferedImage crop = skin.getSubimage(sx, sy, sw, sh);
+        UvRect uv = faceUv(b, f.side());
+        int sx = Math.round(uv.x() * s);
+        int sy = Math.round(uv.y() * s);
+        int sw = Math.round(uv.w() * s);
+        int sh = Math.round(uv.h() * s);
+        if (sx + sw > src.getWidth() || sy + sh > src.getHeight()) return null;
+
+        BufferedImage crop = src.getSubimage(sx, sy, sw, sh);
         if (b.mirrored()) crop = flipHorizontal(crop);
         return f.shade() >= 1f ? crop : darken(crop, f.shade());
     }

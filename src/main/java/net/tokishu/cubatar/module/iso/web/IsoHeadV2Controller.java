@@ -26,6 +26,6 @@ public class IsoHeadV2Controller {
             @RequestParam(defaultValue = "0") double pitch,
             HttpServletResponse response) {
 
-        service.process(input, size, yaw, pitch, Part.HEAD, false, null, response);
+        service.process(input, size, yaw, pitch, Part.HEAD, false, null, false, response);
     }
 }
