@@ -136,7 +136,7 @@ curl "http://localhost:8080/v1/iso/full/Notch?yaw=200&pose=walk"
 <iframe src="https://your.host/view/Notch?headbob=false" width="300" height="400" frameborder="0"></iframe>
 ```
 
-Parameters: `walk=true` (walking animation), `headbob=true` (head movement during walk), `rotate=true` (auto-rotate), `wheelzoom=false` (mouse-wheel zoom — off so the iframe doesn't steal scrolling), `zoom=0.9`, `fov=40`, `bg=` (hex color, transparent by default), `model=auto`, `cape=true` (wear the player's cape), `elytra=false` (wear it as elytra instead).
+Parameters: `walk=true` (walking animation), `headbob=true` (head movement during walk), `rotate=true` (auto-rotate), `yaw=0` / `pitch=0` (fixed starting camera angle in degrees, same convention as `/v1/iso`), `vrotate=true` (`false` disables vertical drag rotation, horizontal-only), `hrotate=true` (`false` disables horizontal drag rotation, vertical-only), `wheelzoom=false` (mouse-wheel zoom — off so the iframe doesn't steal scrolling), `zoom=0.9`, `fov=40`, `bg=` (hex color, transparent by default), `model=auto`, `cape=true` (wear the player's cape), `elytra=false` (wear it as elytra instead).
 
 ## Quick Start
 

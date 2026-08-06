@@ -53,6 +53,32 @@
   // Колёсико по умолчанию не перехватываем - в iframe посреди страницы это бесит
   viewer.controls.enableZoom = flag("wheelzoom", false);
 
+  // ?yaw / ?pitch (градусы, как у /v1/iso) - фиксированный ракурс камеры, 0/0 = спереди
+  if (params.has("yaw") || params.has("pitch")) {
+    const azimuth = parseFloat(params.get("yaw") || "0") * Math.PI / 180;
+    const polar = (90 - parseFloat(params.get("pitch") || "0")) * Math.PI / 180;
+    const radius = viewer.camera.position.length();
+    viewer.camera.position.set(
+      radius * Math.sin(polar) * Math.sin(azimuth),
+      radius * Math.cos(polar),
+      radius * Math.sin(polar) * Math.cos(azimuth),
+    );
+  }
+  viewer.controls.update();
+
+  // ?vrotate=false - запретить вращение по вертикали (только горизонталь)
+  if (!flag("vrotate", true)) {
+    const polar = viewer.controls.getPolarAngle();
+    viewer.controls.minPolarAngle = polar;
+    viewer.controls.maxPolarAngle = polar;
+  }
+  // ?hrotate=false - запретить вращение по горизонтали (только вертикаль)
+  if (!flag("hrotate", true)) {
+    const azimuth = viewer.controls.getAzimuthalAngle();
+    viewer.controls.minAzimuthAngle = azimuth;
+    viewer.controls.maxAzimuthAngle = azimuth;
+  }
+
   const bg = params.get("bg");
   if (bg) viewer.background = "#" + bg.replace(/[^0-9a-fA-F]/g, "");
 
