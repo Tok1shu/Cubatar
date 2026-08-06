@@ -3,6 +3,7 @@ package net.tokishu.cubatar.module.body.service;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.tokishu.cubatar.common.PngResponseWriter;
+import net.tokishu.cubatar.common.SkinModel;
 import net.tokishu.cubatar.module.body.util.FullBodyGenerator;
 import net.tokishu.cubatar.module.resolve.ResolvedSkin;
 import net.tokishu.cubatar.module.resolve.SkinResolverService;
@@ -19,7 +20,7 @@ public class BodyService {
 
     public void process(String input, int size, boolean back, Boolean slimOverride, HttpServletResponse response) {
         ResolvedSkin skin = resolver.resolveWithModel(input);
-        Boolean slim = slimOverride != null ? slimOverride : skin.slim();
+        Boolean slim = SkinModel.resolve(slimOverride, skin.slim());
         BufferedImage image = back
                 ? FullBodyGenerator.generateBackView(skin.image(), size, slim)
                 : FullBodyGenerator.generateFrontView(skin.image(), size, slim);

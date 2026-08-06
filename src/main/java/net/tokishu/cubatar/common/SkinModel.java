@@ -14,4 +14,20 @@ public final class SkinModel {
             default -> null;
         };
     }
+
+    /**
+     * Итоговая модель для рендера: null означает "решить по текстуре".
+     * <p>
+     * Явный параметр запроса главнее всего. Дальше - профиль Mojang, но
+     * доверяем ему только когда он говорит slim: slim приходит явным
+     * {@code metadata.model}, а вот classic - это ПРОСТО ОТСУТСТВИЕ metadata,
+     * то есть "не указано". Скин при этом вполне может быть нарисован под
+     * slim (руки 3 вокселя), и рендер classic-раскладкой съедает у задней
+     * грани руки 2 пустые колонки - руки выглядят прорезанными. Поэтому
+     * "classic" из профиля отдаём на проверку текстуре.
+     */
+    public static Boolean resolve(Boolean override, Boolean profileSlim) {
+        if (override != null) return override;
+        return Boolean.TRUE.equals(profileSlim) ? Boolean.TRUE : null;
+    }
 }
