@@ -24,23 +24,27 @@ public class SkinResolverService {
     private final RestClient restClient;
 
     public BufferedImage resolve(String input) {
+        return resolveWithModel(input).image();
+    }
+
+    /**
+     * Как {@link #resolve}, но с моделью скина (slim/classic) из профиля
+     * Mojang, когда input - ник или UUID. Для прямых URL модель неизвестна
+     * (slim == null) - рендеры в этом случае используют эвристику.
+     */
+    public ResolvedSkin resolveWithModel(String input) {
         RequestType type = getRequestType(input);
         return switch (type) {
-            case UUID     -> skinFromUUID(input);
-            case URL      -> skinFromUrl(input);
-            case NICKNAME -> skinFromUsername(input);
+            case UUID     -> skinFromUUID(UUID.fromString(input));
+            case URL      -> new ResolvedSkin(skinFromUrl(input), null);
+            case NICKNAME -> skinFromUUID(gateway.getUUIDFromUsername(input));
         };
     }
 
-    private BufferedImage skinFromUUID(String uuid) {
-        String url = gateway.getSkinUrlFromUUID(UUID.fromString(uuid));
-        return skinFromUrl(url);
-    }
-
-    private BufferedImage skinFromUsername(String username) {
-        UUID uuid = gateway.getUUIDFromUsername(username);
-        String url = gateway.getSkinUrlFromUUID(uuid);
-        return skinFromUrl(url);
+    private ResolvedSkin skinFromUUID(UUID uuid) {
+        SkinTexture texture = gateway.getSkinFromUUID(uuid);
+        if (texture == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Skin not found");
+        return new ResolvedSkin(skinFromUrl(texture.url()), texture.slim());
     }
 
     private BufferedImage skinFromUrl(String input) {

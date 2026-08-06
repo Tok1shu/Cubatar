@@ -44,7 +44,7 @@ public class MojangGateway {
     }
 
     @Cacheable(value = "skins", key = "#uuid", unless = "#result == null")
-    public String getSkinUrlFromUUID(UUID uuid) {
+    public SkinTexture getSkinFromUUID(UUID uuid) {
         String response = restClient.get()
                 .uri(SKIN_URL + uuid.toString())
                 .retrieve()
@@ -62,10 +62,18 @@ public class MojangGateway {
             String encodedJson = properties.get(0).get("value").asString();
             String decodedJson = new String(Base64.getDecoder().decode(encodedJson));
 
-            String skinUrl = mapper.readTree(decodedJson).get("textures").get("SKIN").get("url").asString();
+            JsonNode skinNode = mapper.readTree(decodedJson).get("textures").get("SKIN");
+            String skinUrl = skinNode.get("url").asString();
             if (skinUrl == null) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while getting skin URL");
 
-            return skinUrl;
+            // Модель Mojang сообщает явно: metadata.model = "slim" у Alex-скинов,
+            // у classic-скинов metadata отсутствует вовсе
+            JsonNode metadata = skinNode.get("metadata");
+            boolean slim = metadata != null
+                    && metadata.get("model") != null
+                    && "slim".equals(metadata.get("model").asString());
+
+            return new SkinTexture(skinUrl, slim);
         }
         return null;
     }

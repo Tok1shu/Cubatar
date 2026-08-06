@@ -38,8 +38,8 @@ public class FullBodyGenerator {
     private static final int HEAD_DEPTH = 8;
     private static final int LIMB_DEPTH = 4;
 
-    public static BufferedImage generateFrontView(BufferedImage rawSkin, int headSize) {
-        return generate(rawSkin, headSize, false);
+    public static BufferedImage generateFrontView(BufferedImage rawSkin, int headSize, Boolean slim) {
+        return generate(rawSkin, headSize, false, slim);
     }
 
     /**
@@ -52,16 +52,16 @@ public class FullBodyGenerator {
      * (затемнённый, снизу) и видимый верхний слой меняются местами — сзади
      * подложкой становится передняя грань шлема, а видимым слоем — задняя.
      */
-    public static BufferedImage generateBackView(BufferedImage rawSkin, int headSize) {
-        return generate(rawSkin, headSize, true);
+    public static BufferedImage generateBackView(BufferedImage rawSkin, int headSize, Boolean slim) {
+        return generate(rawSkin, headSize, true, slim);
     }
 
-    private static BufferedImage generate(BufferedImage rawSkin, int headSize, boolean back) {
+    private static BufferedImage generate(BufferedImage rawSkin, int headSize, boolean back, Boolean slim) {
         if (rawSkin == null) return null;
 
         BufferedImage skin = normalizeSkin(rawSkin);
         boolean isLegacy = rawSkin.getHeight() == 32;
-        boolean isAlex   = detectAlex(skin, isLegacy);
+        boolean isAlex   = !isLegacy && (slim != null ? slim : detectAlex(skin));
 
         float scale = skin.getWidth() / 64f;
 
@@ -199,13 +199,29 @@ public class FullBodyGenerator {
         return result;
     }
 
-    private static boolean detectAlex(BufferedImage skin, boolean isLegacy) {
-        if (isLegacy) return false;
+    /**
+     * Эвристика на случай, когда модель не пришла из профиля Mojang (скин по
+     * прямому URL): у classic-раскладки задняя грань правой руки занимает
+     * колонки x 54..56 (y 20..32), левой - x 46..48 (y 52..64); у slim руки
+     * на воксель уже и до этих колонок не дотягиваются. Если обе зоны
+     * полностью прозрачны - считаем скин slim.
+     */
+    private static boolean detectAlex(BufferedImage skin) {
         float scale = skin.getWidth() / 64f;
-        int checkX = Math.round(54 * scale);
-        int checkY = Math.round(16 * scale);
-        if (checkX >= skin.getWidth() || checkY >= skin.getHeight()) return false;
-        return ((skin.getRGB(checkX, checkY) >> 24) & 0xFF) == 0;
+        return regionTransparent(skin, scale, 54, 20, 2, 12)
+                && regionTransparent(skin, scale, 46, 52, 2, 12);
+    }
+
+    private static boolean regionTransparent(BufferedImage skin, float scale, int vx, int vy, int vw, int vh) {
+        int x0 = Math.round(vx * scale), y0 = Math.round(vy * scale);
+        int x1 = Math.min(Math.round((vx + vw) * scale), skin.getWidth());
+        int y1 = Math.min(Math.round((vy + vh) * scale), skin.getHeight());
+        for (int x = x0; x < x1; x++) {
+            for (int y = y0; y < y1; y++) {
+                if (((skin.getRGB(x, y) >> 24) & 0xFF) != 0) return false;
+            }
+        }
+        return true;
     }
 
     private static BufferedImage normalizeSkin(BufferedImage original) {
