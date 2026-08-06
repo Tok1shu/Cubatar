@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cubatar 3D viewer</title>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="viewer"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/skinview3d@3/bundles/skinview3d.bundle.js"></script>
+<script>
+  // Имя/UUID/base64-URL берём из пути страницы (/view/{input}) на клиенте и
+  // подставляем только через encodeURIComponent - сервер ничего не шаблонизирует
+  // в HTML, поэтому XSS через input невозможен by design.
+  const params = new URLSearchParams(location.search);
+  const flag = (name, def) => params.has(name) ? params.get(name) !== "false" : def;
+
+  const input = decodeURIComponent(location.pathname.replace(/\/+$/, "").split("/").pop());
+
+  const viewer = new skinview3d.SkinViewer({
+    canvas: document.getElementById("viewer"),
+    width: innerWidth,
+    height: innerHeight,
+    fov: parseFloat(params.get("fov") || "40"),
+    zoom: parseFloat(params.get("zoom") || "0.9"),
+  });
+
+  // ?model=slim|classic - явное указание модели, иначе автоопределение
+  const model = ({ slim: "slim", alex: "slim", classic: "default", steve: "default", wide: "default" })
+      [(params.get("model") || "").toLowerCase()] || "auto-detect";
+  viewer.loadSkin("/v1/skin/" + encodeURIComponent(input), { model });
+
+  if (flag("walk", true)) {
+    viewer.animation = new skinview3d.WalkingAnimation();
+    viewer.animation.speed = 0.6;
+    // ?headbob=false - зафиксировать голову, не все хотят, чтобы игрок ей вертел
+    viewer.animation.headBobbing = flag("headbob", true);
+  }
+  viewer.autoRotate = flag("rotate", true);
+  viewer.autoRotateSpeed = 0.7;
+  // Колёсико по умолчанию не перехватываем - в iframe посреди страницы это бесит
+  viewer.controls.enableZoom = flag("wheelzoom", false);
+
+  const bg = params.get("bg");
+  if (bg) viewer.background = "#" + bg.replace(/[^0-9a-fA-F]/g, "");
+
+  addEventListener("resize", () => viewer.setSize(innerWidth, innerHeight));
+  // Не жжём GPU, когда вкладка в фоне
+  document.addEventListener("visibilitychange", () => { viewer.renderPaused = document.hidden; });
+</script>
+</body>
+</html>
